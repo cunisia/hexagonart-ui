@@ -1,0 +1,9 @@
+fragment ColorEventFragment on ColorEvent {
+  id
+  createdAt
+  tileId
+  userId
+  r
+  g
+  b
+}

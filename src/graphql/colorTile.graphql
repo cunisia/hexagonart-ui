@@ -1,15 +1,11 @@
+#import "./colorEventFragment.graphql"
+
 mutation ColorTile($input: ColorTileInput!) {
   colorTile(input: $input) {
     message
     success
     colorEvent {
-      id
-      createdAt
-      tileId
-      userId
-      r
-      g
-      b
+      ...ColorEventFragment
     }
   }
 }

@@ -1,3 +1,5 @@
+#import "./colorEventFragment.graphql"
+
 query boardWithTiles($boardId: ID!) {
   board(id: $boardId) {
     id
@@ -10,10 +12,7 @@ query boardWithTiles($boardId: ID!) {
       r
       c
       lastColorEvent {
-        id
-        r
-        g
-        b
+        ...ColorEventFragment
       }
     }
   }
