@@ -1,11 +1,14 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import {
   BoardWithTilesQuery,
   BoardWithTilesGQL,
+  ColorEventGQL,
 } from '../../../graphql/generated';
 import { BOARD_ID } from '../../const';
 import { TileComponent } from '../tile/tile.component';
+import { Apollo } from 'apollo-angular';
+import { UpdateCacheOnColorEventService } from '../update-cache-on-color-event.service';
 
 @Component({
   selector: 'app-board',
@@ -15,20 +18,34 @@ import { TileComponent } from '../tile/tile.component';
   styleUrl: './board.component.scss',
 })
 export class BoardComponent {
+  boardId: string = BOARD_ID;
   board: BoardWithTilesQuery['board'];
   loading = false;
 
-  constructor(boardWithTilesGQL: BoardWithTilesGQL) {
+  constructor(
+    updateCacheOnColorEventService: UpdateCacheOnColorEventService,
+    boardWithTilesGQL: BoardWithTilesGQL,
+    colorEventGQL: ColorEventGQL
+  ) {
     boardWithTilesGQL
-      .watch({ boardId: BOARD_ID }, { notifyOnNetworkStatusChange: true })
+      .watch({ boardId: this.boardId }, { notifyOnNetworkStatusChange: true })
       .valueChanges.subscribe(({ data, loading }) => {
         this.board = data.board;
         this.loading = loading;
       });
-  }
 
-  getBoardStr() {
-    return JSON.stringify(this.board);
+    colorEventGQL.subscribe({ boardId: BOARD_ID }).subscribe({
+      next: ({ data }) => {
+        const colorEvent = data?.colorEvent;
+        if (!colorEvent) {
+          return;
+        }
+        updateCacheOnColorEventService.update({
+          boardId: this.boardId,
+          colorEvent,
+        });
+      },
+    });
   }
 
   getTiles() {

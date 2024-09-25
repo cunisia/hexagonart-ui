@@ -1,4 +1,8 @@
 .tile {
-  transition: 0.4s;
+  transition: 0.2s;
   cursor: pointer;
+
+  &:hover {
+    opacity: 0.7;
+  }
 }

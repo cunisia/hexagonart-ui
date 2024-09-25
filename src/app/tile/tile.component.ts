@@ -6,6 +6,9 @@ import {
   ColorTileGQL,
 } from '../../../graphql/generated';
 import { NgStyle } from '@angular/common';
+import { USER_ID } from '../../const';
+import { getRGBStr, RGBColor } from '../../utils';
+import { UpdateCacheOnColorEventService } from '../update-cache-on-color-event.service';
 
 type Tile = NonNullable<
   Pick<BoardWithTilesQuery, 'board'>['board']
@@ -14,6 +17,10 @@ type Tile = NonNullable<
 export const TILE_WITH = 18;
 export const TILE_HEIGHT = 20;
 export const EXPERIMENTAL_MAGIC_RATIO = 3 / 4;
+export const R = 255;
+export const G = 255;
+export const B = 255;
+export const DEFAULT_COLOR = { r: R, g: G, b: B };
 
 @Component({
   selector: '[tile-component]',
@@ -26,16 +33,19 @@ export class TileComponent {
   @Input() boardId!: string;
   @Input() tile!: Tile;
   loading = false;
+  tempColor: RGBColor | undefined;
 
-  constructor(private readonly colorTileGQL: ColorTileGQL) {}
+  constructor(
+    private readonly colorTileGQL: ColorTileGQL,
+    private readonly updateCacheOnColorEventService: UpdateCacheOnColorEventService
+  ) {}
 
   getColor() {
-    const { lastColorEvent } = this.tile;
-    if (!!lastColorEvent) {
-      const { r, g, b } = lastColorEvent;
-      return `rgb(${r}, ${g}, ${b})`;
+    if (this.loading) {
+      return getRGBStr(this.tempColor ?? DEFAULT_COLOR);
     }
-    return '#fff';
+    const { lastColorEvent } = this.tile;
+    return getRGBStr(lastColorEvent ?? DEFAULT_COLOR);
   }
 
   getX() {
@@ -48,76 +58,60 @@ export class TileComponent {
     return (2 * r + a) * TILE_HEIGHT * EXPERIMENTAL_MAGIC_RATIO;
   }
 
-  getTranslate() {
-    return `translate(${this.getX()}, ${this.getY()})`;
-  }
-
   colorTile() {
-    const boardId = this.boardId;
-
+    const color = DEFAULT_COLOR;
+    this.loading = true;
     this.colorTileGQL
       .mutate(
         {
           input: {
             tileId: this.tile.id,
-            r: 255,
-            g: 255,
-            b: 255,
+            ...color,
           },
         },
         {
-          update: (store, { data }) => {
+          useMutationLoading: true,
+          // FIXME: Commented right now as it seems to double rending time since rendering og board is under optimized right now...
+          // optimisticResponse: {
+          //   __typename: 'Mutation',
+          //   colorTile: {
+          //     __typename: 'ColorTileResponse',
+          //     message: 'OK',
+          //     success: true,
+          //     colorEvent: {
+          //       __typename: 'ColorEvent',
+          //       id: -1,
+          //       createdAt: new Date(),
+          //       tileId: this.tile.id,
+          //       userId: USER_ID,
+          //       ...color,
+          //     },
+          //   },
+          // },
+          update: (_, { data }) => {
             const colorEvent = data?.colorTile.colorEvent;
             if (!colorEvent) {
               return;
             }
-            // Read the data from our cache for this query.
-            const cachedData = store.readQuery<
-              BoardWithTilesQuery,
-              BoardWithTilesQueryVariables
-            >({
-              query: BoardWithTilesDocument,
-              variables: { boardId: this.boardId },
+
+            this.updateCacheOnColorEventService.update({
+              boardId: this.boardId,
+              colorEvent,
             });
-            const tiles = cachedData?.board?.tiles;
-            if (!cachedData?.board?.tiles || !tiles) {
-              // TS is a bit too stupid to understand they are the same
-              return;
-            }
-            const tileIndex = tiles.findIndex(
-              (tile) => tile.id === this.tile.id
-            );
-            const tile = tiles[tileIndex];
-            if (!tile) {
-              return;
-            }
-            const newTile = { ...tile, lastColorEvent: colorEvent };
-            const newTiles = [...tiles];
-            newTiles[tileIndex] = newTile;
-            const newCachedData = {
-              ...cachedData,
-              board: { ...cachedData.board, tiles: newTiles },
-            };
-            store.writeQuery<BoardWithTilesQuery, BoardWithTilesQueryVariables>(
-              {
-                query: BoardWithTilesDocument,
-                data: newCachedData,
-                variables: { boardId: this.boardId },
-              }
-            );
           },
         }
       )
       .subscribe({
         next: ({ data, loading }) => {
           this.loading = loading ?? false;
+          console.log('---> loading = ', this.loading);
           // toto
         },
         complete: () => {
-          // TODO
+          this.loading = false;
         },
         error: ({ error }) => {
-          // TODO
+          this.loading = false;
         },
       });
   }
