@@ -1,0 +1,9 @@
+<svg:use 
+  class="tile" 
+  xlink:href="#hexagon" 
+  [ngStyle]="{fill: getColor()}"
+  [attr.x]="getX()"
+  [attr.y]="getY()"
+  (click)="colorTile()">
+a:{{tile.a}}, r:{{tile.r}}, c:{{tile.c}}
+</svg:use>

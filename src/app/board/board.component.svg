@@ -1,0 +1,19 @@
+<svg width="100vw" height="100vh">
+  <defs>
+    <g id="hexagon">
+      <polygon stroke="#000000" stroke-width="0.5" points="0,10 -9,5 -9,-5 0,-10 9,-5 9,5" tranform="rotate(60)" />
+    </g>
+  </defs>
+  
+  <g class="hexagons-wrap">
+    @if(!!board) {
+      @for(tile of getTiles(); track tile.id) {
+        <g tile-component [tile]="tile" [boardId]="board.id" />
+      }
+    }
+    @else {
+      <text>Loading...</text>
+    }
+    
+  </g>
+</svg>

@@ -1,0 +1,20 @@
+query boardWithTiles($boardId: ID!) {
+  board(id: $boardId) {
+    id
+    createdAt
+    updatedAt
+    name
+    tiles {
+      id
+      a
+      r
+      c
+      lastColorEvent {
+        id
+        r
+        g
+        b
+      }
+    }
+  }
+}
