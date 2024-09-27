@@ -1,7 +1,3 @@
-export type RGBColor = {
-  r: number;
-  g: number;
-  b: number;
-};
-
-export const getRGBStr = ({ r, g, b }: RGBColor) => `rgb(${r}, ${g}, ${b})`;
+// min and max included
+export const randomIntFromInterval = (min: number, max: number): number =>
+  Math.floor(Math.random() * (max - min + 1) + min);

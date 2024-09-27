@@ -1,10 +1,10 @@
 import { Routes } from '@angular/router';
-import { BoardComponent } from './board/board.component';
+import { StudioComponent } from './studio/studio.component';
 
 export const routes: Routes = [
   {
     path: '',
-    component: BoardComponent,
+    component: StudioComponent,
     title: 'Hexagonart',
   },
 ];

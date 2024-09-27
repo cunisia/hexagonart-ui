@@ -1,0 +1,13 @@
+<svg:use 
+  class="color-option" 
+  xlink:href="#hexagon-option" 
+  [ngStyle]="{fill: getColor()}"
+  [attr.x]="colorOption.cartesianCoords.x"
+  [attr.y]="colorOption.cartesianCoords.y"
+  (click)="pickColor()">
+  <text>
+    a:{{colorOption.hexaCoords.a}}, 
+    r:{{colorOption.hexaCoords.r}}, 
+    c:{{colorOption.hexaCoords.c}}
+    </text>
+</svg:use>

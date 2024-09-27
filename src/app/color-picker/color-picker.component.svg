@@ -1,0 +1,17 @@
+<!-- to compute width : polygon_width * (2*hexa_size - 1) -->
+<!-- to compute height : polygon_height * (2*hexa_size - 1) -->
+<svg width="100px" height="100px" viewBox="-117 -90 234 180">
+  <defs>
+    <g id="hexagon-option">
+      <polygon
+        points="0,10 -9,5 -9,-5 0,-10 9,-5 9,5"
+      />
+    </g>
+  </defs>
+
+  <g class="color-wheel">
+    @for(colorOption of colorOptions; track colorOption.id) {
+      <g app-color-option [colorOption]="colorOption" (onSelected)="onSelectedColor($event)" /> 
+    } 
+  </g>
+</svg>
