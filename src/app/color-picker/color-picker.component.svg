@@ -9,9 +9,23 @@
     </g>
   </defs>
 
-  <g class="color-wheel">
-    @for(colorOption of colorOptions; track colorOption.id) {
-      <g app-color-option [colorOption]="colorOption" (onSelected)="onSelectedColor($event)" /> 
-    } 
-  </g>
+  @if(isChoosing) {
+    <g class="color-wheel">
+      @for(colorOption of colorOptions; track colorOption.id) {
+        <g app-color-option [colorOption]="colorOption" (onSelected)="onSelectedColor($event)" /> 
+      } 
+    </g>
+  }
+  @else() {
+    <g class="selected-color"> 
+      <svg:use 
+        class="color-option" 
+        xlink:href="#hexagon-option" 
+        [ngStyle]="{fill: getSelectedColor()}"
+        transform="scale(7)"
+        x="0"
+        y="0"
+        (click)="switchToChoosingColorMode()"/> 
+    </g>
+  }
 </svg>
