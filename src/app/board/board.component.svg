@@ -8,7 +8,14 @@
   <g class="hexagons-wrap">
     @if(!!board) {
       @for(tile of getTiles(); track tile.id) {
-        <g tile-component [tile]="tile" [boardId]="board.id" />
+          <svg:use 
+            appTile
+            class="tile" 
+            xlink:href="#hexagon" 
+            [tile]="tile" 
+            [boardId]="board.id">
+          a:{{tile.a}}, r:{{tile.r}}, c:{{tile.c}}
+        </svg:use>
       }
     }
     @else {

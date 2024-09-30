@@ -1,20 +1,18 @@
 import {
-  ChangeDetectionStrategy,
-  Component,
   DestroyRef,
+  Directive,
+  ElementRef,
+  HostListener,
   Input,
+  OnChanges,
   OnInit,
+  SimpleChanges,
 } from '@angular/core';
 import { BoardWithTilesQuery, ColorTileGQL } from '../../../graphql/generated';
-import { NgStyle } from '@angular/common';
-import { UpdateCacheOnColorEventService } from '../update-cache-on-color-event.service';
-import { CartesianCoord, CoordinatesService } from '../coordinates.service';
 import { ColorService, RGBColor } from '../color.service';
+import { CartesianCoord, CoordinatesService } from '../coordinates.service';
 import { SelectedColorContextService } from '../selected-color-context.service';
-
-type Tile = NonNullable<
-  Pick<BoardWithTilesQuery, 'board'>['board']
->['tiles'][number];
+import { UpdateCacheOnColorEventService } from '../update-cache-on-color-event.service';
 
 export const TILE_WITH = 18;
 export const TILE_HEIGHT = 20;
@@ -23,24 +21,24 @@ export const G = 255;
 export const B = 255;
 export const DEFAULT_COLOR = { r: R, g: G, b: B };
 
-@Component({
-  selector: '[tile-component]',
+type Tile = NonNullable<
+  Pick<BoardWithTilesQuery, 'board'>['board']
+>['tiles'][number];
+
+@Directive({
+  selector: '[appTile]',
   standalone: true,
-  imports: [NgStyle],
-  templateUrl: './tile.component.svg',
-  styleUrl: './tile.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TileComponent implements OnInit {
+export class TileDirective implements OnInit, OnChanges {
   @Input() boardId!: string;
 
   @Input() tile!: Tile;
 
   private selectedColor: RGBColor;
 
-  cartesianCoords: CartesianCoord | undefined;
-  loading = false;
-  tempColor: RGBColor | undefined;
+  private cartesianCoords: CartesianCoord | undefined;
+  private loading = false;
+  private tempColor: RGBColor | undefined;
 
   constructor(
     private readonly colorTileGQL: ColorTileGQL,
@@ -48,12 +46,17 @@ export class TileComponent implements OnInit {
     private readonly colorService: ColorService,
     private readonly coordinatesService: CoordinatesService,
     private readonly selectedColorContextService: SelectedColorContextService,
-    private readonly destroyRef: DestroyRef
+    private readonly destroyRef: DestroyRef,
+    private el: ElementRef<SVGUseElement>
   ) {
     this.selectedColor = colorService.getRandomColor();
   }
 
-  ngOnInit(): void {
+  @HostListener('click') onClick() {
+    this.colorTile();
+  }
+
+  ngOnInit() {
     const selectedColor$ =
       this.selectedColorContextService.selectedColor$.subscribe((value) => {
         this.selectedColor = value;
@@ -65,17 +68,29 @@ export class TileComponent implements OnInit {
       tileHeight: TILE_HEIGHT,
       tileWidth: TILE_WITH,
     });
+
+    this.el.nativeElement.setAttribute('x', this.cartesianCoords.x + '');
+    this.el.nativeElement.setAttribute('y', this.cartesianCoords.y + '');
   }
 
-  getColor() {
+  ngOnChanges(changes: SimpleChanges): void {
+    const tileChange = Object.keys(changes).find(
+      (changeName) => changeName === 'tile'
+    );
+    if (!!tileChange) {
+      this.el.nativeElement.style.fill = this.getColor();
+    }
+  }
+
+  private getColor() {
     if (this.loading) {
-      return this.colorService.getRGBStr(this.tempColor ?? DEFAULT_COLOR);
+      return this.colorService.getRGBStr(this.selectedColor);
     }
     const { lastColorEvent } = this.tile;
     return this.colorService.getRGBStr(lastColorEvent ?? DEFAULT_COLOR);
   }
 
-  colorTile() {
+  private colorTile() {
     const color = this.selectedColor;
     this.loading = true;
     this.colorTileGQL

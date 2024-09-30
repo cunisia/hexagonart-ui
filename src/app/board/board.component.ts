@@ -6,15 +6,14 @@ import {
   ColorEventGQL,
 } from '../../../graphql/generated';
 import { BOARD_ID } from '../../const';
-import { TileComponent } from '../tile/tile.component';
 import { UpdateCacheOnColorEventService } from '../update-cache-on-color-event.service';
 import { RGBColor } from '../color.service';
-import { TileDirective } from '../tile.directive';
+import { TileDirective } from '../tile/tile.directive';
 
 @Component({
   selector: 'app-board',
   standalone: true,
-  imports: [TileComponent, TileDirective],
+  imports: [TileDirective],
   templateUrl: './board.component.svg',
   styleUrl: './board.component.scss',
 })
