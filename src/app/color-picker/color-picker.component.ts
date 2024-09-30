@@ -1,6 +1,5 @@
 import { Component, DestroyRef, Input, OnDestroy, OnInit } from '@angular/core';
 import { CoordinatesService, HexaCoord } from '../coordinates.service';
-import { TILE_HEIGHT, TILE_WITH } from '../tile/tile.component';
 import { ColorService, RGBColor } from '../color.service';
 import {
   ColorOption,
@@ -9,6 +8,7 @@ import {
 import { ColorWheelService } from '../color-wheel.service';
 import { SelectedColorContextService } from '../selected-color-context.service';
 import { NgStyle } from '@angular/common';
+import { TILE_HEIGHT, TILE_WITH } from '../../const';
 
 const EDGE_SIZE = 7;
 

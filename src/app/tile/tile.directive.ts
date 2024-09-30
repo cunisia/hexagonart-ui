@@ -13,13 +13,7 @@ import { ColorService, RGBColor } from '../color.service';
 import { CartesianCoord, CoordinatesService } from '../coordinates.service';
 import { SelectedColorContextService } from '../selected-color-context.service';
 import { UpdateCacheOnColorEventService } from '../update-cache-on-color-event.service';
-
-export const TILE_WITH = 18;
-export const TILE_HEIGHT = 20;
-export const R = 255;
-export const G = 255;
-export const B = 255;
-export const DEFAULT_COLOR = { r: R, g: G, b: B };
+import { TILE_HEIGHT, TILE_WITH, DEFAULT_COLOR } from '../../const';
 
 type Tile = NonNullable<
   Pick<BoardWithTilesQuery, 'board'>['board']
@@ -38,7 +32,6 @@ export class TileDirective implements OnInit, OnChanges {
 
   private cartesianCoords: CartesianCoord | undefined;
   private loading = false;
-  private tempColor: RGBColor | undefined;
 
   constructor(
     private readonly colorTileGQL: ColorTileGQL,
