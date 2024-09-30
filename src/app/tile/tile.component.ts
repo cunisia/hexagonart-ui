@@ -1,4 +1,10 @@
-import { Component, Input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  Input,
+  OnInit,
+} from '@angular/core';
 import { BoardWithTilesQuery, ColorTileGQL } from '../../../graphql/generated';
 import { NgStyle } from '@angular/common';
 import { UpdateCacheOnColorEventService } from '../update-cache-on-color-event.service';
@@ -23,24 +29,14 @@ export const DEFAULT_COLOR = { r: R, g: G, b: B };
   imports: [NgStyle],
   templateUrl: './tile.component.svg',
   styleUrl: './tile.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TileComponent {
+export class TileComponent implements OnInit {
   @Input() boardId!: string;
 
-  private _tile!: Tile;
-  @Input() set tile(tile: Tile) {
-    this._tile = tile;
-    this.cartesianCoords = this.coordinatesService.getCartesianFromHexaCoord({
-      hexaCoords: tile,
-      tileHeight: TILE_HEIGHT,
-      tileWidth: TILE_WITH,
-    });
-  }
-  get tile() {
-    return this._tile;
-  }
+  @Input() tile!: Tile;
 
-  private color: RGBColor;
+  private selectedColor: RGBColor;
 
   cartesianCoords: CartesianCoord | undefined;
   loading = false;
@@ -51,14 +47,23 @@ export class TileComponent {
     private readonly updateCacheOnColorEventService: UpdateCacheOnColorEventService,
     private readonly colorService: ColorService,
     private readonly coordinatesService: CoordinatesService,
-    private readonly selectedColorContextService: SelectedColorContextService
+    private readonly selectedColorContextService: SelectedColorContextService,
+    private readonly destroyRef: DestroyRef
   ) {
-    this.color = colorService.getRandomColor();
+    this.selectedColor = colorService.getRandomColor();
   }
 
   ngOnInit(): void {
-    this.selectedColorContextService.selectedColor$.subscribe((value) => {
-      this.color = value;
+    const selectedColor$ =
+      this.selectedColorContextService.selectedColor$.subscribe((value) => {
+        this.selectedColor = value;
+      });
+    this.destroyRef.onDestroy(selectedColor$.unsubscribe);
+
+    this.cartesianCoords = this.coordinatesService.getCartesianFromHexaCoord({
+      hexaCoords: this.tile,
+      tileHeight: TILE_HEIGHT,
+      tileWidth: TILE_WITH,
     });
   }
 
@@ -71,7 +76,7 @@ export class TileComponent {
   }
 
   colorTile() {
-    const color = this.color;
+    const color = this.selectedColor;
     this.loading = true;
     this.colorTileGQL
       .mutate(

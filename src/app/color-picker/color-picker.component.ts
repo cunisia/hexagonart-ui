@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, DestroyRef, Input, OnDestroy, OnInit } from '@angular/core';
 import { CoordinatesService, HexaCoord } from '../coordinates.service';
 import { TILE_HEIGHT, TILE_WITH } from '../tile/tile.component';
 import { ColorService, RGBColor } from '../color.service';
@@ -8,32 +8,54 @@ import {
 } from '../color-option/color-option.component';
 import { ColorWheelService } from '../color-wheel.service';
 import { SelectedColorContextService } from '../selected-color-context.service';
+import { NgStyle } from '@angular/common';
 
 const EDGE_SIZE = 7;
 
 @Component({
   selector: 'app-color-picker',
   standalone: true,
-  imports: [ColorOptionComponent],
+  imports: [ColorOptionComponent, NgStyle],
   templateUrl: './color-picker.component.svg',
   styleUrl: './color-picker.component.scss',
 })
-export class ColorPickerComponent {
+export class ColorPickerComponent implements OnInit {
   @Input() color!: RGBColor;
 
   isChoosing = false;
-  colorOptions: ColorOption[];
+  colorOptions: ColorOption[] = [];
+  private selectedColor: RGBColor;
 
   constructor(
     private readonly coordinatesService: CoordinatesService,
     private readonly colorWheelService: ColorWheelService,
-    private readonly selectedColorContextService: SelectedColorContextService
+    private readonly colorService: ColorService,
+    private readonly selectedColorContextService: SelectedColorContextService,
+    private readonly destroyRef: DestroyRef
   ) {
+    this.selectedColor = this.colorService.getRandomColor();
+  }
+
+  ngOnInit(): void {
     this.colorOptions = this.getColorOptions();
+    const selectedColor$ =
+      this.selectedColorContextService.selectedColor$.subscribe(
+        (value) => (this.selectedColor = value)
+      );
+    this.destroyRef.onDestroy(selectedColor$.unsubscribe);
   }
 
   onSelectedColor(color: RGBColor) {
     this.selectedColorContextService.selectColor(color);
+    this.isChoosing = false;
+  }
+
+  getSelectedColor() {
+    return this.colorService.getRGBStr(this.selectedColor);
+  }
+
+  switchToChoosingColorMode() {
+    this.isChoosing = true;
   }
 
   private getColorOptions() {
